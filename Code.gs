@@ -104,6 +104,11 @@ function signIn_(guest) {
     const last = sheet.getLastRow();
     const numbers = last > 1 ? sheet.getRange(2, cols['Sign-In #'], last - 1, 1).getValues() : [];
     const number = numbers.reduce((max, r) => Math.max(max, Number(r[0]) || 0), 0) + 1;
+    // The Ready to Send checkboxes fill the whole column, so getLastRow() is the
+    // bottom of the tab. The new row goes under the last row with a Sign-In #.
+    let used = numbers.length;
+    while (used > 0 && numbers[used - 1][0] === '') used--;
+    const rowNum = used + 2;
 
     const record = {
       'Sign-In #': number,
@@ -115,7 +120,7 @@ function signIn_(guest) {
     };
     const row = new Array(sheet.getLastColumn()).fill('');
     Object.keys(record).forEach((h) => { row[cols[h] - 1] = record[h]; });
-    sheet.getRange(last + 1, 1, 1, row.length).setValues([row]);
+    sheet.getRange(rowNum, 1, 1, row.length).setValues([row]);
     signInsChanged_();
     return { status: 'ok', number: number };
   } finally {
