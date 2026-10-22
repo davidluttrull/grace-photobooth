@@ -1,15 +1,15 @@
 # Photo Booth: Setup
 
-This replaces the paper Photo Booth Sign-In Sheet for Harvest Family Night. Families sign in on an iPad at the booth, and a worker adds the camera's photo number to each sign-in. After the event, the Sheet emails every family their photo.
+This replaces the paper Photo Booth Sign-In Sheet for Harvest Family Night. Families add their names on an iPad at the booth, and a worker adds the camera's photo number to each family. After the event, the Sheet emails every family their photo.
 
 It has two parts:
 
-- **The Sheet and its script** (`Code.gs` and `Sender.gs`). The script lives inside the Google Sheet. `Code.gs` saves each sign-in and photo number. `Sender.gs` adds the **Photo Booth** menu that emails the photos.
+- **The Sheet and its script** (`Code.gs` and `Sender.gs`). The script lives inside the Google Sheet. `Code.gs` saves each family's name and photo number. `Sender.gs` adds the **Photo Booth** menu that emails the photos.
 - **The page** (`index.html`, plus the logo, icons and `manifest.webmanifest`), hosted on GitHub Pages. It has two modes, switched with the buttons at the top right:
-  - **Sign-In:** a family types their name, email and phone. After they confirm, the page shows their sign-in number in large type.
-  - **Photo Numbers:** every sign-in, newest first, each with a box for the photo number. New sign-ins show up within a few seconds, and **Refresh** checks right away. A sign-in made on the same iPad shows up immediately.
+  - **Names:** a family types their name, email and phone. After they confirm, the page shows their number in large type.
+  - **Photo Numbers:** every family, newest first, each with a box for the photo number. New names show up within a few seconds, and **Refresh** checks right away. A name added on the same iPad shows up immediately.
 
-With two workers, one iPad stays on Sign-In and the other on Photo Numbers. With one worker, a single iPad switches between the two.
+With two workers, one iPad stays on Names and the other on Photo Numbers. With one worker, a single iPad switches between the two.
 
 The page talks to the script without any Google sign-in. Each iPad needs the **staff code** once, a 6-digit number the script creates, and remembers it after that.
 
@@ -50,18 +50,18 @@ In `index.html`, find `const API_URL = '';` and put the `/exec` URL between the 
 ## 6. Set up the iPads
 
 1. Open the page in Safari. The page asks for the staff code once.
-2. Tap Share → **Add to Home Screen**. It shows up as **Photo Booth** with the Grace icon and opens full screen.
-3. On the sign-in iPad, consider turning on **Guided Access** (Settings → Accessibility → Guided Access). It keeps families inside the page.
+2. Bookmark it, or open a station directly: `…/grace-photobooth/#names` or `…/grace-photobooth/#photos`. (**Share → Add to Home Screen** also works; it shows up as **Photo Booth** with the Grace icon.)
+3. On the Names iPad, consider turning on **Guided Access** (Settings → Accessibility → Guided Access). It keeps families inside the page.
 
 ## At the event
 
-- **Sign-In:** the family types their name (parents' names), email and phone. Tapping @gmail.com, @yahoo.com and the other buttons fills in the end of the email. If an email looks misspelled (gmial.com, yahooo.com and similar), the page offers the fix. Before saving, it shows everything in large type so the family can check it. They need at least an email or a phone number.
-- The page then shows their **sign-in number** and returns to a blank form after 20 seconds, or sooner if someone taps **Next family**.
+- **Names:** the family types their name (parents' names), email and phone. Tapping @gmail.com, @yahoo.com and the other buttons fills in the end of the email. If an email looks misspelled (gmial.com, yahooo.com and similar), the page offers the fix. Before saving, it shows everything in large type so the family can check it. They need at least an email or a phone number.
+- The page then shows their **number** and returns to a blank form after 20 seconds, or sooner if someone taps **Next family**.
 - **Photo Numbers:** when the photographer takes a family's picture, type the last three digits of the camera's file number (DSC00**527** → `527`) in that family's box and tap **Save** or Return. Several photos go in one box, separated by commas: `570, 573`. Typing the whole number, like `DSC00527` or `00527`, also saves as `527`.
-- **Needs photo #** lists the families still waiting. **All** shows everyone, so you can fix a number already saved. Search finds a family by name or sign-in number.
+- **Needs photo #** lists the families still waiting. **All** shows everyone, so you can fix a number already saved. Search finds a family by name or number.
 - Saving a photo number checks **Ready to Send** in the Sheet, unless the family left no email.
 
-If the Wi-Fi drops, nothing typed is lost. Sign-In keeps the form filled in so the family can tap Sign In again, and Photo Numbers keeps checking until it reconnects.
+If the Wi-Fi drops, nothing typed is lost. Names keeps the form filled in so the family can tap Add My Name again, and Photo Numbers keeps checking until it reconnects.
 
 ## After the event: sending the photos
 

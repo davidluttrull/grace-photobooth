@@ -2,8 +2,8 @@
  * Grace Baptist Church - Harvest Family Night Photo Booth
  *
  * Back end for the photo booth page (index.html, hosted on GitHub Pages).
- * The sign-in station sends each family's name, email and phone, and gets
- * back a sign-in number. The photo station lists the sign-ins and adds the
+ * The Names station sends each family's name, email and phone, and gets
+ * back the family's number. The Photo Numbers station lists them and adds the
  * camera's photo number to each one. Sender.gs emails the photos afterward.
  * See SETUP.md for how to deploy it.
  *
@@ -208,7 +208,7 @@ function setPhoto_(number, photo) {
     const last = sheet.getLastRow();
     const numbers = last > 1 ? sheet.getRange(2, cols['Sign-In #'], last - 1, 1).getValues() : [];
     const index = numbers.findIndex((r) => Number(r[0]) === Number(number));
-    if (index === -1) throw new Error('Sign-in #' + number + ' isn\'t in the sheet any more.');
+    if (index === -1) throw new Error('Number ' + number + ' isn\'t in the Sheet any more. Tap Refresh.');
     const rowNum = index + 2;
     const hasEmail = String(sheet.getRange(rowNum, cols['Email']).getValue()).includes('@');
     sheet.getRange(rowNum, cols['Photo #']).setValue(value);

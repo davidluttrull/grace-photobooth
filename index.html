@@ -110,7 +110,7 @@
   .modes button:focus-visible { outline: 2px solid #fff; }
 
   main { margin: 0 auto; padding: 24px 24px 64px; }
-  #signin, #setup { max-width: 680px; }
+  #names, #setup { max-width: 680px; }
   #photos { max-width: 960px; }
 
   .card {
@@ -365,7 +365,7 @@
         <p><strong>Photo Booth</strong>Harvest Family Night</p>
       </div>
       <nav class="modes" id="modes" role="tablist" aria-label="Station" hidden>
-        <button type="button" role="tab" data-mode="signin" aria-selected="false">Sign-In</button>
+        <button type="button" role="tab" data-mode="names" aria-selected="false">Names</button>
         <button type="button" role="tab" data-mode="photos" aria-selected="false">Photo Numbers</button>
       </nav>
     </div>
@@ -386,10 +386,10 @@
     </form>
   </main>
 
-  <!-- Families sign in -->
-  <main id="signin" hidden>
-    <form class="card" id="signinForm" novalidate autocomplete="off">
-      <h1>Sign in for your photo</h1>
+  <!-- Families add their names -->
+  <main id="names" hidden>
+    <form class="card" id="namesForm" novalidate autocomplete="off">
+      <h1>Get your photo by email</h1>
       <p class="lede">We&rsquo;ll email your picture after Harvest Family Night.</p>
       <label class="field">
         <span>Your name <small>(parents&rsquo; names, like John &amp; Cheryl Ball)</small></span>
@@ -415,14 +415,14 @@
         <span>Phone <small>(in case the email doesn&rsquo;t go through)</small></span>
         <input id="phone" type="tel" inputmode="tel" maxlength="16" placeholder="765-555-1234" enterkeyhint="done">
       </label>
-      <button type="submit" class="primary" id="signinBtn">Sign In</button>
+      <button type="submit" class="primary" id="namesBtn">Add My Name</button>
     </form>
   </main>
 
-  <!-- A worker adds the camera's photo number to each sign-in -->
+  <!-- A worker adds the camera's photo number to each family -->
   <main id="photos" hidden>
     <div class="toolbar">
-      <input class="search" id="search" type="search" placeholder="Search name or sign-in #" autocomplete="off" autocorrect="off" spellcheck="false">
+      <input class="search" id="search" type="search" placeholder="Search name or number" autocomplete="off" autocorrect="off" spellcheck="false">
       <div class="filters" role="radiogroup" aria-label="Show">
         <button type="button" class="chip" data-filter="needs" aria-pressed="true">Needs photo # <span id="needsCount"></span></button>
         <button type="button" class="chip" data-filter="all" aria-pressed="false">All <span id="allCount"></span></button>
@@ -457,7 +457,7 @@
   const CODE_KEY = 'gbc-photobooth-code';
   const MODE_KEY = 'gbc-photobooth-mode';
   const NEXT_FAMILY_AFTER = 20; // seconds the "You're #12" screen stays up
-  const REFRESH_EVERY = 4000;   // pause between checks for new sign-ins, counted from the last answer
+  const REFRESH_EVERY = 4000;   // pause between checks for new names, counted from the last answer
   const MAX_BACKOFF = 30000;    // after failed checks, wait up to this long between tries
 
   // Common misspellings of the domains people type most.
@@ -490,13 +490,13 @@
   // The POST body is plain text and no cookies are sent, so there's no CORS
   // preflight and no Google login involved.
   async function api(action, extra) {
-    if (!API_URL) throw new Error('This page isn’t connected to the sign-in sheet yet. See SETUP.md, step 5.');
+    if (!API_URL) throw new Error('This page isn’t connected to the photo booth sheet yet. See SETUP.md, step 5.');
     let res;
     try {
       const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(Object.assign({ code: code, action: action }, extra)) });
       res = await r.json();
     } catch (e) {
-      throw new Error('Couldn’t reach the sign-in sheet. Check the Wi-Fi and try again.');
+      throw new Error('Couldn’t reach the photo booth sheet. Check the Wi-Fi and try again.');
     }
     if (res.status === 'badcode') {
       lockOut('The staff code isn’t right, or it has changed. Enter the current one.');
@@ -512,11 +512,11 @@
 
   function show(next) {
     mode = next;
-    ['#loading', '#setup', '#signin', '#photos'].forEach((sel) => { $(sel).hidden = true; });
+    ['#loading', '#setup', '#names', '#photos'].forEach((sel) => { $(sel).hidden = true; });
     $('#' + next).hidden = false;
     $('#modes').hidden = next === 'setup';
     $$('#modes button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === next)));
-    if (next === 'signin' || next === 'photos') {
+    if (next === 'names' || next === 'photos') {
       store((s) => s.setItem(MODE_KEY, next));
       history.replaceState(null, '', '#' + next);
     }
@@ -524,6 +524,12 @@
     if (next === 'photos') checkNow();
     if (next === 'setup') setTimeout(() => $('#staffCode').focus(), 50);
     window.scrollTo(0, 0);
+  }
+
+  // The mode this iPad was last on. Before the rename, Names was called "signin".
+  function savedMode() {
+    const m = store((s) => s.getItem(MODE_KEY));
+    return m === 'photos' ? 'photos' : 'names';
   }
 
   function lockOut(message) {
@@ -587,7 +593,7 @@
     try {
       await api('check');
       store((s) => s.setItem(CODE_KEY, entered));
-      show(store((s) => s.getItem(MODE_KEY)) || 'signin');
+      show(savedMode());
     } catch (err) {
       if (!err.badcode) { code = ''; toast(err.message); }
     } finally {
@@ -596,7 +602,7 @@
     }
   });
 
-  // ---- Sign-in ------------------------------------------------------------
+  // ---- Names ------------------------------------------------------------
 
   function phoneDigits(value) {
     let d = value.replace(/\D/g, '');
@@ -670,7 +676,7 @@
     return null;
   }
 
-  $('#signinForm').addEventListener('submit', async (e) => {
+  $('#namesForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     document.activeElement.blur();
     const guest = {
@@ -694,16 +700,16 @@
                      : '<p class="confirm-line"><span>Email</span><strong>None given</strong></p>') +
         (suggestion ? '<p class="hint-box"><span>Did you mean <b>' + esc(suggestion) + '</b>?</span></p>' : '') +
         (guest.phone ? '<p class="confirm-line"><span>Phone</span><strong>' + esc(formatPhone(phoneDigits(guest.phone))) + '</strong></p>' : ''),
-      ok: 'Yes, sign in',
+      ok: 'Yes, that’s right',
       cancel: 'Fix it',
     });
     if (!ok) {
       $(suggestion ? '#email' : '#name').focus();
       return;
     }
-    const btn = $('#signinBtn');
+    const btn = $('#namesBtn');
     btn.disabled = true;
-    btn.textContent = 'Signing in…';
+    btn.textContent = 'Adding…';
     let res;
     try {
       res = await api('signIn', { guest: guest });
@@ -712,7 +718,7 @@
       return;
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Sign In';
+      btn.textContent = 'Add My Name';
     }
     // Add the family to Photo Numbers now, so an iPad doing both jobs doesn't
     // wait for the next check. The next check replaces this with the Sheet's row.
@@ -727,13 +733,13 @@
     render();
     await dialog({
       check: true,
-      title: 'You’re signed in!',
+      title: 'You’re all set!',
       body: 'Your number is<span class="big-num">' + res.number + '</span>Tell the photographer your number' +
         (guest.email ? ', and we’ll email your photo to <strong>' + esc(guest.email) + '</strong>.' : '.'),
       ok: 'Next family',
       autoClose: NEXT_FAMILY_AFTER,
     });
-    $('#signinForm').reset();
+    $('#namesForm').reset();
     updateEmailHelp();
     window.scrollTo(0, 0);
   });
@@ -743,7 +749,7 @@
   let rows = [];
   let filter = 'needs';
   let refreshTimer;
-  const justSaved = {}; // sign-in # -> time saved, so a saved row doesn't vanish from "Needs" at once
+  const justSaved = {}; // family number -> time saved, so a saved row doesn't vanish from "Needs" at once
   const rowEls = {};
 
   function photoRow(r) {
@@ -761,7 +767,7 @@
 
   function fillRow(el, r) {
     el.querySelector('.name').textContent = r.name;
-    const bits = ['Signed in ' + esc(r.time)];
+    const bits = ['Added ' + esc(r.time)];
     bits.push(r.hasEmail ? 'Has email' : '<span class="warn">No email</span>');
     if (r.sent) bits.push('<span class="ok">Photo emailed</span>');
     else if (justSaved[r.number] && r.photo) bits.push('<span class="ok">Saved</span>');
@@ -773,7 +779,7 @@
 
   function render() {
     const list = $('#list');
-    // Drop any sign-in that's no longer in the Sheet (a deleted test row, say).
+    // Drop any family that's no longer in the Sheet (a deleted test row, say).
     const current = new Set(rows.map((r) => String(r.number)));
     Object.keys(rowEls).forEach((n) => {
       if (!current.has(n)) {
@@ -804,8 +810,8 @@
     $('#needsCount').textContent = '(' + needs + ')';
     $('#allCount').textContent = '(' + rows.length + ')';
     $('#empty').hidden = shown > 0;
-    $('#empty').textContent = !rows.length ? 'No one has signed in yet. New sign-ins show up here on their own.'
-      : q ? 'No sign-ins match “' + $('#search').value.trim() + '”.'
+    $('#empty').textContent = !rows.length ? 'No names yet. New families show up here on their own.'
+      : q ? 'No one matches “' + $('#search').value.trim() + '”.'
       : 'Every family has a photo number. Nice work!';
   }
 
@@ -821,7 +827,7 @@
       render();
       $('#status').classList.remove('bad');
       $('#status').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) +
-        '. New sign-ins appear on their own.';
+        '. New names appear on their own.';
     } catch (err) {
       if (!err.badcode) {
         failures++;
@@ -836,7 +842,7 @@
   // Each iPad has at most one check out at a time, and the next one starts
   // REFRESH_EVERY after the last answer, so a slow Sheet never gets a pile of
   // requests. After a failure the wait doubles, up to MAX_BACKOFF. A locked
-  // iPad, or one on the Sign-In screen, doesn't check at all.
+  // iPad, or one on the Names screen, doesn't check at all.
   async function checkNow() {
     clearTimeout(refreshTimer);
     if (mode !== 'photos') return;
@@ -919,7 +925,7 @@
   code = store((s) => s.getItem(CODE_KEY)) || '';
   const fromHash = location.hash.slice(1);
   if (!code) show('setup');
-  else show(fromHash === 'photos' || fromHash === 'signin' ? fromHash : store((s) => s.getItem(MODE_KEY)) || 'signin');
+  else show(fromHash === 'photos' || fromHash === 'names' ? fromHash : fromHash === 'signin' ? 'names' : savedMode());
 </script>
 </body>
 </html>

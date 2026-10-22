@@ -182,11 +182,11 @@
   <main>
     <section class="card">
       <h2>How it fits together</h2>
-      <p>Families sign in on an iPad instead of the paper sheet. A volunteer adds the camera&rsquo;s photo number to each sign-in. After the event, the Google Sheet emails every family their photo.</p>
+      <p>Families add their names on an iPad instead of the paper sheet. A volunteer adds the camera&rsquo;s photo number to each family. After the event, the Google Sheet emails every family their photo.</p>
       <table>
-        <tr><th>The page</th><td><a href="https://davidluttrull.github.io/grace-photobooth/">davidluttrull.github.io/grace-photobooth</a>. What the iPads open. It has two modes, Sign-In and Photo Numbers.</td></tr>
-        <tr><th>The Sheet</th><td><strong>2027 HFN Photo Booth Sign-Ins</strong>, the copy in the church Google account. Each sign-in is one row on the <strong>Sign-Ins</strong> tab.</td></tr>
-        <tr><th>The script</th><td>Inside the Sheet (<strong>Extensions &rarr; Apps Script</strong>). <code>Code.gs</code> saves sign-ins and photo numbers. <code>Sender.gs</code> adds the <strong>Photo Booth</strong> menu that emails the photos.</td></tr>
+        <tr><th>The page</th><td><a href="https://davidluttrull.github.io/grace-photobooth/">davidluttrull.github.io/grace-photobooth</a>. What the iPads open. It has two modes, Names and Photo Numbers.</td></tr>
+        <tr><th>The Sheet</th><td><strong>2027 HFN Photo Booth Sign-Ins</strong>, the copy in the church Google account. Each family is one row on the <strong>Sign-Ins</strong> tab.</td></tr>
+        <tr><th>The script</th><td>Inside the Sheet (<strong>Extensions &rarr; Apps Script</strong>). <code>Code.gs</code> saves names and photo numbers. <code>Sender.gs</code> adds the <strong>Photo Booth</strong> menu that emails the photos.</td></tr>
         <tr><th>The code</th><td><a href="https://github.com/davidluttrull/grace-photobooth">github.com/davidluttrull/grace-photobooth</a>, with a copy in the <strong>Project Files</strong> folder next to this guide.</td></tr>
       </table>
       <p class="note">The iPads don&rsquo;t sign in to Google. Each one needs the staff code once, and the page only works with it.</p>
@@ -198,7 +198,7 @@
       <ul>
         <li>A new code works right away; nothing needs redeploying. Each iPad asks for the new one the next time it talks to the Sheet.</li>
         <li>After 20 wrong codes in 10 minutes, from any device, the Sheet refuses everything for 10 minutes. That stops anyone guessing the code.</li>
-        <li>Give the code to the volunteers at the booth, not in a public post. Anyone with the code can see the names of the families who signed in.</li>
+        <li>Give the code to the volunteers at the booth, not in a public post. Anyone with the code can see the names of the families on the list.</li>
       </ul>
     </section>
 
@@ -206,10 +206,10 @@
       <h2>Before the event</h2>
       <ul class="check">
         <li>Charge the iPads, and check they connect to the building&rsquo;s Wi-Fi where the booth will be.</li>
-        <li>On each iPad, open the page in Safari, enter the staff code, then <strong>Share &rarr; Add to Home Screen</strong>. It shows up as <strong>Photo Booth</strong>.</li>
-        <li>Set each iPad to its job with the buttons at the top right: <strong>Sign-In</strong> or <strong>Photo Numbers</strong>. It stays on that one.</li>
-        <li>On the sign-in iPad, turn on <strong>Guided Access</strong> (Settings &rarr; Accessibility &rarr; Guided Access) so families stay in the page. Triple-click the side button to start and end it.</li>
-        <li>Do a test run: sign in a pretend family, add a photo number on the other screen, and check the row appears in the Sheet with <strong>Ready to Send</strong> checked. Then delete the test row.</li>
+        <li>On each iPad, open the page in Safari and enter the staff code. Bookmark it, or open the station pages directly: <code>&hellip;/grace-photobooth/#names</code> and <code>&hellip;/grace-photobooth/#photos</code>.</li>
+        <li>Set each iPad to its job with the buttons at the top right: <strong>Names</strong> or <strong>Photo Numbers</strong>. It stays on that one.</li>
+        <li>On the Names iPad, turn on <strong>Guided Access</strong> (Settings &rarr; Accessibility &rarr; Guided Access) so families stay in the page. Triple-click the side button to start and end it.</li>
+        <li>Do a test run: add a pretend family on Names, add a photo number on the other screen, and check the row appears in the Sheet with <strong>Ready to Send</strong> checked. Then delete the test row.</li>
         <li>Set the camera&rsquo;s file numbering to continue (not reset) so numbers don&rsquo;t repeat during the night.</li>
         <li>Print the <strong>Volunteer Guide</strong> for the booth.</li>
       </ul>
@@ -217,7 +217,7 @@
 
     <section class="card">
       <h2>During the event</h2>
-      <p>You can watch the <strong>Sign-Ins</strong> tab fill in from any computer or phone. Each row has the sign-in number, the time, the family&rsquo;s name, email and phone, and the photo number once a volunteer adds it.</p>
+      <p>You can watch the <strong>Sign-Ins</strong> tab fill in from any computer or phone. Each row has the family&rsquo;s number (the <strong>Sign-In #</strong> column), the time, the family&rsquo;s name, email and phone, and the photo number once a volunteer adds it.</p>
       <ul>
         <li>Saving a photo number checks <strong>Ready to Send</strong>, unless the family left no email.</li>
         <li>You can fix a typo in a name or email, or delete a test row, right in the Sheet. The iPads pick up the change within a few seconds.</li>
@@ -275,7 +275,7 @@
     <section class="card">
       <h2>Troubleshooting</h2>
       <dl class="faq">
-        <dt>The iPads say &ldquo;Couldn&rsquo;t reach the sign-in sheet&rdquo;</dt>
+        <dt>The iPads say &ldquo;Couldn&rsquo;t reach the photo booth sheet&rdquo;</dt>
         <dd>Check the Wi-Fi first. Then open the <code>/exec</code> web app URL in a browser: it should show <code>{"status":"ok"}</code>. If it shows a Google error page, wait a minute and try again. A brand-new deployment can take a moment to start answering.</dd>
         <dt>&ldquo;Too many wrong codes. Wait 10 minutes and try again.&rdquo;</dt>
         <dd>Someone entered the wrong staff code 20 times. It clears itself after 10 minutes.</dd>
