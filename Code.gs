@@ -51,14 +51,19 @@ function json_(value) {
 
 /**
  * Run this once from the editor. It checks the Sign-Ins and Email Settings
- * tabs, grants permissions, and creates the staff code (the first time),
+ * tabs, grants permissions, adds the trigger that notices deleted rows, and
+ * creates the staff code (the first time),
  * which it shows in the Execution log. To change the code, edit STAFF_CODE
  * under Project Settings > Script Properties.
  */
 function setup() {
   const sheet = signInsSheet_();
   settingsSheet_();
-  SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sheet);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.setActiveSheet(sheet);
+  if (!ScriptApp.getProjectTriggers().some((t) => t.getHandlerFunction() === 'onSheetChange')) {
+    ScriptApp.newTrigger('onSheetChange').forSpreadsheet(ss).onChange().create();
+  }
 
   const props = PropertiesService.getScriptProperties();
   let code = props.getProperty('STAFF_CODE');
@@ -152,6 +157,14 @@ function signInsChanged_() {
 /** A hand edit on the Sign-Ins tab (fixing a name, say) shows on the iPads at the next check. */
 function onEdit(e) {
   if (e && e.range && e.range.getSheet().getName() === SIGNINS) signInsChanged_();
+}
+
+/**
+ * Deleting or inserting rows isn't an edit, so onEdit misses it. setup makes
+ * an installable "on change" trigger that runs this instead.
+ */
+function onSheetChange() {
+  signInsChanged_();
 }
 
 /** Every sign-in, newest first, with only what the photo station needs. */

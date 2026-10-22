@@ -773,6 +773,14 @@
 
   function render() {
     const list = $('#list');
+    // Drop any sign-in that's no longer in the Sheet (a deleted test row, say).
+    const current = new Set(rows.map((r) => String(r.number)));
+    Object.keys(rowEls).forEach((n) => {
+      if (!current.has(n)) {
+        rowEls[n].remove();
+        delete rowEls[n];
+      }
+    });
     // Newest first. Rows already in place aren't moved, so a box someone is
     // typing in keeps its focus.
     let next = list.firstChild;
