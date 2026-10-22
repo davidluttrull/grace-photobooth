@@ -146,6 +146,7 @@ function sendPhotos() {
     GmailApp.sendEmail(String(r['Email']).trim(), msg.subject, msg.body, mailOptions_(settings, msg.attachments));
     sheet.getRange(r._row, cols['Sent']).setValue(new Date());
     SpreadsheetApp.flush();
+    signInsChanged_();
     sent++;
   }
   ui.alert('Sent ' + sent + ' emails.' + (skipped ? ' Skipped ' + skipped + ' (see Notes).' : ''));

@@ -219,7 +219,8 @@
     font-size: 20px;
   }
   .filters { display: flex; gap: 8px; }
-  .filters .chip { min-height: 56px; font-size: 17px; }
+  .filters .chip, .toolbar .refresh { min-height: 56px; font-size: 17px; }
+  .toolbar .refresh:disabled { opacity: .6; }
   .status { width: 100%; margin: -4px 0 0; font-size: 15px; color: var(--muted); }
   .status.bad { color: var(--danger); }
 
@@ -426,6 +427,7 @@
         <button type="button" class="chip" data-filter="needs" aria-pressed="true">Needs photo # <span id="needsCount"></span></button>
         <button type="button" class="chip" data-filter="all" aria-pressed="false">All <span id="allCount"></span></button>
       </div>
+      <button type="button" class="chip refresh" id="refreshBtn">Refresh</button>
       <p class="status" id="status" aria-live="polite"></p>
     </div>
     <div id="list"></div>
@@ -455,7 +457,8 @@
   const CODE_KEY = 'gbc-photobooth-code';
   const MODE_KEY = 'gbc-photobooth-mode';
   const NEXT_FAMILY_AFTER = 20; // seconds the "You're #12" screen stays up
-  const REFRESH_EVERY = 8000;   // how often the photo list checks for new sign-ins
+  const REFRESH_EVERY = 4000;   // pause between checks for new sign-ins, counted from the last answer
+  const MAX_BACKOFF = 30000;    // after failed checks, wait up to this long between tries
 
   // Common misspellings of the domains people type most.
   const DOMAIN_TYPOS = {
@@ -517,11 +520,8 @@
       store((s) => s.setItem(MODE_KEY, next));
       history.replaceState(null, '', '#' + next);
     }
-    clearInterval(refreshTimer);
-    if (next === 'photos') {
-      refresh();
-      refreshTimer = setInterval(() => { if (!document.hidden) refresh(); }, REFRESH_EVERY);
-    }
+    clearTimeout(refreshTimer);
+    if (next === 'photos') checkNow();
     if (next === 'setup') setTimeout(() => $('#staffCode').focus(), 50);
     window.scrollTo(0, 0);
   }
@@ -714,6 +714,17 @@
       btn.disabled = false;
       btn.textContent = 'Sign In';
     }
+    // Add the family to Photo Numbers now, so an iPad doing both jobs doesn't
+    // wait for the next check. The next check replaces this with the Sheet's row.
+    rows = rows.filter((r) => r.number !== res.number).concat({
+      number: res.number,
+      name: guest.name,
+      time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+      photo: '',
+      hasEmail: !!guest.email,
+      sent: false,
+    }).sort((a, b) => b.number - a.number);
+    render();
     await dialog({
       check: true,
       title: 'You’re signed in!',
@@ -762,14 +773,14 @@
 
   function render() {
     const list = $('#list');
-    // Newest first. New sign-ins always have higher numbers, so they go on top.
-    rows.slice().reverse().forEach((r) => {
-      let el = rowEls[r.number];
-      if (!el) {
-        el = rowEls[r.number] = photoRow(r);
-        list.insertBefore(el, list.firstChild);
-      }
+    // Newest first. Rows already in place aren't moved, so a box someone is
+    // typing in keeps its focus.
+    let next = list.firstChild;
+    rows.slice().sort((a, b) => b.number - a.number).forEach((r) => {
+      const el = rowEls[r.number] || (rowEls[r.number] = photoRow(r));
       fillRow(el, r);
+      if (el === next) next = next.nextSibling;
+      else list.insertBefore(el, next);
     });
     const q = $('#search').value.trim().toLowerCase().replace(/^#/, '');
     let shown = 0;
@@ -791,24 +802,40 @@
   }
 
   let refreshing = false;
+  let failures = 0;
   async function refresh() {
     if (refreshing || mode !== 'photos') return;
     refreshing = true;
     try {
       const res = await api('list');
       rows = res.rows;
+      failures = 0;
       render();
       $('#status').classList.remove('bad');
       $('#status').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) +
         '. New sign-ins appear on their own.';
     } catch (err) {
       if (!err.badcode) {
+        failures++;
         $('#status').classList.add('bad');
         $('#status').textContent = err.message + ' Trying again shortly.';
       }
     } finally {
       refreshing = false;
     }
+  }
+
+  // Each iPad has at most one check out at a time, and the next one starts
+  // REFRESH_EVERY after the last answer, so a slow Sheet never gets a pile of
+  // requests. After a failure the wait doubles, up to MAX_BACKOFF. A locked
+  // iPad, or one on the Sign-In screen, doesn't check at all.
+  async function checkNow() {
+    clearTimeout(refreshTimer);
+    if (mode !== 'photos') return;
+    if (!document.hidden) await refresh();
+    if (mode !== 'photos') return;
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(checkNow, Math.min(MAX_BACKOFF, REFRESH_EVERY * 2 ** failures));
   }
 
   $('#list').addEventListener('input', (e) => {
@@ -840,6 +867,19 @@
     }
   });
 
+  $('#refreshBtn').addEventListener('click', async () => {
+    const btn = $('#refreshBtn');
+    if (refreshing) return;
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    try {
+      await checkNow();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Refresh';
+    }
+  });
+
   $('#search').addEventListener('input', render);
   $$('[data-filter]').forEach((b) => b.addEventListener('click', () => {
     filter = b.dataset.filter;
@@ -865,7 +905,7 @@
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && mode === 'photos') refresh();
+    if (!document.hidden && mode === 'photos') checkNow();
   });
 
   code = store((s) => s.getItem(CODE_KEY)) || '';

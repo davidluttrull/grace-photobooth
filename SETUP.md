@@ -7,7 +7,7 @@ It has two parts:
 - **The Sheet and its script** (`Code.gs` and `Sender.gs`). The script lives inside the Google Sheet. `Code.gs` saves each sign-in and photo number. `Sender.gs` adds the **Photo Booth** menu that emails the photos.
 - **The page** (`index.html`, plus the logo, icons and `manifest.webmanifest`), hosted on GitHub Pages. It has two modes, switched with the buttons at the top right:
   - **Sign-In:** a family types their name, email and phone. After they confirm, the page shows their sign-in number in large type.
-  - **Photo Numbers:** every sign-in, newest first, each with a box for the photo number. New sign-ins show up within a few seconds.
+  - **Photo Numbers:** every sign-in, newest first, each with a box for the photo number. New sign-ins show up within a few seconds, and **Refresh** checks right away. A sign-in made on the same iPad shows up immediately.
 
 With two workers, one iPad stays on Sign-In and the other on Photo Numbers. With one worker, a single iPad switches between the two.
 

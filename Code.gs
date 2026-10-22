@@ -17,6 +17,7 @@ const HEADERS = ['Sign-In #', 'Signed In At', 'Name(s)', 'Email', 'Phone', 'Phot
                  'Ready to Send', 'Sent', 'Photo File(s)', 'Notes', 'Photo # Added At'];
 const TIME_FORMAT = 'm/d h:mm am/pm';
 const MAX_BAD_CODES = 20; // wrong staff codes allowed per 10 minutes, across all iPads
+const LIST_CACHE_SECONDS = 60; // how long the photo station's list is kept between changes
 
 /** GET: lets the page (or you, in a browser) check that the script is reachable. */
 function doGet() {
@@ -34,7 +35,7 @@ function doPost(e) {
     switch (body.action) {
       case 'check': return json_({ status: 'ok' });
       case 'signIn': return json_(signIn_(body.guest || {}));
-      case 'list': return json_({ status: 'ok', rows: listSignIns_() });
+      case 'list': return json_({ status: 'ok', rows: cachedSignIns_() });
       case 'setPhoto': return json_(setPhoto_(body.number, body.photo));
     }
     throw new Error('The page sent a request the script doesn\'t know. Reload the page.');
@@ -115,10 +116,37 @@ function signIn_(guest) {
     const row = new Array(sheet.getLastColumn()).fill('');
     Object.keys(record).forEach((h) => { row[cols[h] - 1] = record[h]; });
     sheet.getRange(last + 1, 1, 1, row.length).setValues([row]);
+    signInsChanged_();
     return { status: 'ok', number: number };
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * The photo station asks for the list every few seconds. Answering from the
+ * script cache skips reading the Sheet until something changes: every sign-in,
+ * photo number, send, or hand edit on the Sign-Ins tab starts a new version,
+ * so the next request reads the Sheet once and caches that.
+ */
+function cachedSignIns_() {
+  const cache = CacheService.getScriptCache();
+  const key = 'signIns:' + (cache.get('signInsVersion') || '0');
+  const hit = cache.get(key);
+  if (hit) return JSON.parse(hit);
+  const rows = listSignIns_();
+  const text = JSON.stringify(rows);
+  if (text.length < 90000) cache.put(key, text, LIST_CACHE_SECONDS); // a cache entry holds 100 KB at most
+  return rows;
+}
+
+function signInsChanged_() {
+  CacheService.getScriptCache().put('signInsVersion', String(Date.now()), 21600);
+}
+
+/** A hand edit on the Sign-Ins tab (fixing a name, say) shows on the iPads at the next check. */
+function onEdit(e) {
+  if (e && e.range && e.range.getSheet().getName() === SIGNINS) signInsChanged_();
 }
 
 /** Every sign-in, newest first, with only what the photo station needs. */
@@ -168,6 +196,7 @@ function setPhoto_(number, photo) {
     sheet.getRange(rowNum, cols['Photo #']).setValue(value);
     sheet.getRange(rowNum, cols['Ready to Send']).setValue(Boolean(value && hasEmail));
     sheet.getRange(rowNum, cols['Photo # Added At']).setValue(value ? new Date() : '');
+    signInsChanged_();
     return { status: 'ok', photo: value };
   } finally {
     lock.releaseLock();
