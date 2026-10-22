@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grace Photo Booth</title>
+<meta name="theme-color" content="#233617">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Photo Booth">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #7BAE58;
+    --brand-deep: #233617;
+    --brand-mid: #4E7A35;
+    --bg: #F3F8EF;
+    --card: #FFFFFF;
+    --ink: #1E2A16;
+    --muted: #5B6A50;
+    --line: #DCE7D3;
+    --step-bg: #EFF6EA;
+    --step-line: #C6DBB6;
+    --step-ink: #233617;
+    --btn-bg: #233617;
+    --btn-ink: #FFFFFF;
+    --chip-on-bg: #233617;
+    --chip-on-ink: #FFFFFF;
+    --filled: #F6FAF2;
+    --danger: #B3261E;
+    --warn-bg: #FFF4D6;
+    --warn-ink: #5C4400;
+    --shadow: 0 1px 2px rgba(35, 54, 23, .06), 0 2px 8px rgba(35, 54, 23, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10160C;
+      --card: #1A2414;
+      --ink: #E8F0E1;
+      --muted: #A3B396;
+      --line: #2D3B24;
+      --step-bg: #243319;
+      --step-line: #3A4D2E;
+      --step-ink: #E8F0E1;
+      --btn-bg: #7BAE58;
+      --btn-ink: #10160C;
+      --chip-on-bg: #7BAE58;
+      --chip-on-ink: #10160C;
+      --filled: #1F2C18;
+      --danger: #F2B8B5;
+      --warn-bg: #3A3016;
+      --warn-ink: #F5DFA0;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 18px/1.4 'Poppins', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; touch-action: manipulation; }
+  [hidden] { display: none !important; }
+
+  .top {
+    background: var(--brand-deep);
+    color: #fff;
+    padding: calc(16px + env(safe-area-inset-top)) 24px 16px;
+  }
+  .top-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .brand { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+  .brand img { height: 56px; display: block; }
+  .brand p { margin: 0; font-size: 16px; color: #CFE3C0; letter-spacing: .02em; line-height: 1.25; }
+  .brand strong { display: block; color: #fff; font-size: 20px; font-weight: 600; }
+
+  .modes {
+    display: flex;
+    background: rgba(255, 255, 255, .1);
+    border-radius: 14px;
+    padding: 4px;
+    gap: 4px;
+    flex: none;
+  }
+  .modes button {
+    min-height: 48px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 11px;
+    background: none;
+    color: #CFE3C0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .modes button[aria-selected="true"] { background: var(--brand); color: #10160C; font-weight: 600; }
+  .modes button:focus-visible { outline: 2px solid #fff; }
+
+  main { margin: 0 auto; padding: 24px 24px 64px; }
+  #signin, #setup { max-width: 680px; }
+  #photos { max-width: 960px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 28px 32px 32px;
+    box-shadow: var(--shadow);
+  }
+  h1 { margin: 0 0 4px; font-size: 32px; font-weight: 700; line-height: 1.2; }
+  .lede { margin: 0 0 8px; color: var(--muted); font-size: 18px; }
+  h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--brand-mid);
+  }
+  @media (prefers-color-scheme: dark) { h2 { color: var(--brand); } }
+
+  .field { display: block; margin-top: 22px; }
+  .field > span { display: block; font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .field > span small { font-weight: 400; color: var(--muted); font-size: 15px; }
+  .field input {
+    width: 100%;
+    min-height: 64px;
+    padding: 12px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    font-size: 24px;
+  }
+  .field input:not(:placeholder-shown) { background: var(--filled); border-color: var(--step-line); }
+  input::placeholder { color: var(--muted); opacity: .6; }
+  input:focus, button:focus-visible { outline: 3px solid var(--brand); outline-offset: 1px; }
+
+  .domains { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    min-height: 48px;
+    padding: 0 16px;
+    border: 1px solid var(--step-line);
+    background: var(--step-bg);
+    color: var(--step-ink);
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--chip-on-bg);
+    border-color: var(--chip-on-bg);
+    color: var(--chip-on-ink);
+    font-weight: 600;
+  }
+  .chip:active { transform: scale(.96); }
+
+  .hint-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    font-size: 17px;
+  }
+  .hint-box span { flex: 1; }
+  .hint-box button { min-height: 44px; padding: 0 16px; border-radius: 10px; border: 0; background: var(--btn-bg); color: var(--btn-ink); font-weight: 600; font-size: 16px; }
+
+  .primary {
+    display: block;
+    width: 100%;
+    min-height: 68px;
+    margin-top: 30px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--btn-bg);
+    color: var(--btn-ink);
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .primary:disabled { opacity: .6; }
+  .primary:active { transform: scale(.99); }
+
+  .link {
+    display: block;
+    margin: 18px auto 0;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    text-decoration: underline;
+    padding: 10px;
+    font-size: 15px;
+  }
+
+  /* Photo numbers */
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .toolbar .search {
+    flex: 1 1 260px;
+    min-height: 56px;
+    padding: 10px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    font-size: 20px;
+  }
+  .filters { display: flex; gap: 8px; }
+  .filters .chip { min-height: 56px; font-size: 17px; }
+  .status { width: 100%; margin: -4px 0 0; font-size: 15px; color: var(--muted); }
+  .status.bad { color: var(--danger); }
+
+  .guest {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 16px 14px 18px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+  }
+  .guest.done { border-left-color: var(--brand); }
+  .guest .num {
+    flex: none;
+    min-width: 76px;
+    font-size: 30px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--brand-mid);
+  }
+  @media (prefers-color-scheme: dark) { .guest .num { color: var(--brand); } }
+  .guest .who { flex: 1; min-width: 0; }
+  .guest .name { font-size: 21px; font-weight: 600; overflow-wrap: anywhere; }
+  .guest .meta { font-size: 15px; color: var(--muted); }
+  .guest .meta .ok { color: var(--brand-mid); font-weight: 600; }
+  @media (prefers-color-scheme: dark) { .guest .meta .ok { color: var(--brand); } }
+  .guest .meta .warn { color: var(--danger); font-weight: 500; }
+  .guest form { display: flex; gap: 8px; flex: none; }
+  .guest input {
+    width: 150px;
+    min-height: 58px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .guest input:not(:placeholder-shown) { background: var(--filled); border-color: var(--step-line); }
+  .guest input[data-dirty] { border-color: var(--brand); }
+  .guest .save {
+    min-width: 92px;
+    min-height: 58px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--btn-bg);
+    color: var(--btn-ink);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .guest .save:disabled { opacity: .6; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+
+  /* Dialogs */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 22, 12, .6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 10;
+  }
+  .sheet {
+    width: 100%;
+    max-width: 560px;
+    background: var(--card);
+    border-radius: 24px;
+    padding: 32px 32px 28px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .3);
+  }
+  .sheet h3 { margin: 0 0 14px; font-size: 26px; }
+  .sheet .body { margin: 0 0 26px; color: var(--muted); font-size: 18px; }
+  .sheet .body strong { color: var(--ink); }
+  .sheet .confirm-line { margin: 0 0 12px; }
+  .sheet .confirm-line span { display: block; font-size: 15px; }
+  .sheet .confirm-line strong { display: block; font-size: 26px; font-weight: 600; overflow-wrap: anywhere; line-height: 1.25; }
+  .sheet-buttons { display: flex; gap: 12px; }
+  .sheet-buttons button { flex: 1; min-height: 64px; border-radius: 14px; font-size: 20px; font-weight: 600; }
+  .secondary { background: var(--step-bg); border: 1px solid var(--step-line); color: var(--step-ink); }
+  .sheet .ok { background: var(--btn-bg); color: var(--btn-ink); border: 0; }
+
+  .done-sheet { text-align: center; }
+  .check {
+    width: 76px; height: 76px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: var(--brand);
+    display: grid;
+    place-items: center;
+  }
+  .check::after {
+    content: '';
+    width: 17px; height: 31px;
+    border-right: 5px solid #fff;
+    border-bottom: 5px solid #fff;
+    transform: rotate(45deg) translate(-2px, -3px);
+  }
+  .big-num { display: block; font-size: 96px; font-weight: 700; line-height: 1; color: var(--ink); margin: 4px 0 10px; font-variant-numeric: tabular-nums; }
+  .countdown { font-size: 15px; color: var(--muted); margin: 12px 0 0; }
+
+  .loading { text-align: center; padding: 64px 16px; color: var(--muted); }
+
+  .toast {
+    position: fixed;
+    left: 24px; right: 24px;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--danger);
+    color: #fff;
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-size: 18px;
+    z-index: 20;
+  }
+  @media (prefers-color-scheme: dark) { .toast { color: #10160C; } }
+
+  @media (max-width: 700px) {
+    .top-inner { flex-wrap: wrap; justify-content: center; }
+    .brand { justify-content: center; flex-basis: 100%; }
+    main { padding: 16px 12px 48px; }
+    .card { padding: 20px 18px 24px; }
+    .guest { flex-wrap: wrap; }
+    .guest form { width: 100%; }
+    .guest input { flex: 1; }
+  }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand">
+        <img src="logo.png" alt="Grace Baptist Church">
+        <p><strong>Photo Booth</strong>Harvest Family Night</p>
+      </div>
+      <nav class="modes" id="modes" role="tablist" aria-label="Station" hidden>
+        <button type="button" role="tab" data-mode="signin" aria-selected="false">Sign-In</button>
+        <button type="button" role="tab" data-mode="photos" aria-selected="false">Photo Numbers</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="loading" id="loading">Loading&hellip;</div>
+
+  <!-- First time on this iPad: the staff code -->
+  <main id="setup" hidden>
+    <form class="card" id="setupForm" novalidate>
+      <h1>Set up this iPad</h1>
+      <p class="lede" id="setupMsg">Enter the staff code from the church office. This iPad remembers it.</p>
+      <label class="field">
+        <span>Staff code</span>
+        <input id="staffCode" type="password" inputmode="numeric" autocomplete="off" maxlength="20">
+      </label>
+      <button type="submit" class="primary" id="setupBtn">Start</button>
+    </form>
+  </main>
+
+  <!-- Families sign in -->
+  <main id="signin" hidden>
+    <form class="card" id="signinForm" novalidate autocomplete="off">
+      <h1>Sign in for your photo</h1>
+      <p class="lede">We&rsquo;ll email your picture after Harvest Family Night.</p>
+      <label class="field">
+        <span>Your name <small>(parents&rsquo; names, like John &amp; Cheryl Ball)</small></span>
+        <input id="name" maxlength="120" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="First and last name" enterkeyhint="next">
+      </label>
+      <label class="field">
+        <span>Email</span>
+        <input id="email" type="email" inputmode="email" maxlength="120" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="name@example.com" enterkeyhint="next">
+      </label>
+      <div class="domains" id="domains" aria-label="Finish the email with">
+        <button type="button" class="chip" data-domain="gmail.com">@gmail.com</button>
+        <button type="button" class="chip" data-domain="yahoo.com">@yahoo.com</button>
+        <button type="button" class="chip" data-domain="icloud.com">@icloud.com</button>
+        <button type="button" class="chip" data-domain="aol.com">@aol.com</button>
+        <button type="button" class="chip" data-domain="hotmail.com">@hotmail.com</button>
+        <button type="button" class="chip" data-domain="outlook.com">@outlook.com</button>
+      </div>
+      <div class="hint-box" id="emailHint" hidden>
+        <span id="emailHintText"></span>
+        <button type="button" id="emailFix">Fix it</button>
+      </div>
+      <label class="field">
+        <span>Phone <small>(in case the email doesn&rsquo;t go through)</small></span>
+        <input id="phone" type="tel" inputmode="tel" maxlength="16" placeholder="765-555-1234" enterkeyhint="done">
+      </label>
+      <button type="submit" class="primary" id="signinBtn">Sign In</button>
+    </form>
+  </main>
+
+  <!-- A worker adds the camera's photo number to each sign-in -->
+  <main id="photos" hidden>
+    <div class="toolbar">
+      <input class="search" id="search" type="search" placeholder="Search name or sign-in #" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="filters" role="radiogroup" aria-label="Show">
+        <button type="button" class="chip" data-filter="needs" aria-pressed="true">Needs photo # <span id="needsCount"></span></button>
+        <button type="button" class="chip" data-filter="all" aria-pressed="false">All <span id="allCount"></span></button>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+    <div id="list"></div>
+    <p class="empty" id="empty" hidden></p>
+    <button type="button" class="link" id="forget">Forget the staff code on this iPad</button>
+  </main>
+
+  <div class="toast" id="toast" role="alert" hidden></div>
+
+  <div class="overlay" id="dialog" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <div class="check" id="dialogCheck" hidden></div>
+      <h3 id="dialogTitle"></h3>
+      <div class="body" id="dialogBody"></div>
+      <div class="sheet-buttons">
+        <button type="button" class="secondary" id="dialogCancel">Cancel</button>
+        <button type="button" class="ok" id="dialogOk">OK</button>
+      </div>
+      <p class="countdown" id="countdown" hidden></p>
+    </div>
+  </div>
+
+<script>
+  // The Apps Script web app URL (Deploy > Manage deployments). It stays the
+  // same when a new version is deployed.
+  const API_URL = '';
+  const CODE_KEY = 'gbc-photobooth-code';
+  const MODE_KEY = 'gbc-photobooth-mode';
+  const NEXT_FAMILY_AFTER = 20; // seconds the "You're #12" screen stays up
+  const REFRESH_EVERY = 8000;   // how often the photo list checks for new sign-ins
+
+  // Common misspellings of the domains people type most.
+  const DOMAIN_TYPOS = {
+    'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gnail.com': 'gmail.com',
+    'gmail.co': 'gmail.com', 'gmail.cm': 'gmail.com', 'gmail.con': 'gmail.com', 'gmaill.com': 'gmail.com',
+    'gmal.com': 'gmail.com', 'gmail.om': 'gmail.com',
+    'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahoo.co': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+    'yhoo.com': 'yahoo.com',
+    'icloud.co': 'icloud.com', 'iclould.com': 'icloud.com', 'icoud.com': 'icloud.com', 'icloud.con': 'icloud.com',
+    'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmail.co': 'hotmail.com',
+    'outlok.com': 'outlook.com', 'outlook.co': 'outlook.com', 'aol.co': 'aol.com', 'aol.con': 'aol.com',
+  };
+
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  let code = '';
+  let mode = '';
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function store(fn) {
+    try { return fn(window.localStorage); } catch (e) { return null; }
+  }
+
+  // ---- Talking to the script ----------------------------------------------
+
+  // The POST body is plain text and no cookies are sent, so there's no CORS
+  // preflight and no Google login involved.
+  async function api(action, extra) {
+    if (!API_URL) throw new Error('This page isn’t connected to the sign-in sheet yet. See SETUP.md, step 5.');
+    let res;
+    try {
+      const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(Object.assign({ code: code, action: action }, extra)) });
+      res = await r.json();
+    } catch (e) {
+      throw new Error('Couldn’t reach the sign-in sheet. Check the Wi-Fi and try again.');
+    }
+    if (res.status === 'badcode') {
+      lockOut('The staff code isn’t right, or it has changed. Enter the current one.');
+      const err = new Error('');
+      err.badcode = true;
+      throw err;
+    }
+    if (res.status === 'error') throw new Error(res.message);
+    return res;
+  }
+
+  // ---- Screens ------------------------------------------------------------
+
+  function show(next) {
+    mode = next;
+    ['#loading', '#setup', '#signin', '#photos'].forEach((sel) => { $(sel).hidden = true; });
+    $('#' + next).hidden = false;
+    $('#modes').hidden = next === 'setup';
+    $$('#modes button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === next)));
+    if (next === 'signin' || next === 'photos') {
+      store((s) => s.setItem(MODE_KEY, next));
+      history.replaceState(null, '', '#' + next);
+    }
+    clearInterval(refreshTimer);
+    if (next === 'photos') {
+      refresh();
+      refreshTimer = setInterval(() => { if (!document.hidden) refresh(); }, REFRESH_EVERY);
+    }
+    if (next === 'setup') setTimeout(() => $('#staffCode').focus(), 50);
+    window.scrollTo(0, 0);
+  }
+
+  function lockOut(message) {
+    code = '';
+    store((s) => s.removeItem(CODE_KEY));
+    $('#dialog').hidden = true;
+    $('#staffCode').value = '';
+    $('#setupMsg').textContent = message;
+    show('setup');
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    if (!msg) return;
+    const t = $('#toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 7000);
+  }
+
+  let countdownTimer;
+  function dialog(opts) {
+    return new Promise((resolve) => {
+      $('#dialogTitle').textContent = opts.title;
+      $('#dialogBody').innerHTML = opts.body;
+      $('#dialogOk').textContent = opts.ok || 'OK';
+      $('#dialogCancel').hidden = !opts.cancel;
+      $('#dialogCancel').textContent = opts.cancel || '';
+      $('#dialogCheck').hidden = !opts.check;
+      $('.sheet').classList.toggle('done-sheet', !!opts.check);
+      $('#countdown').hidden = !opts.autoClose;
+      $('#dialog').hidden = false;
+      const finish = (ok) => {
+        clearInterval(countdownTimer);
+        $('#dialog').hidden = true;
+        $('#dialogOk').onclick = $('#dialogCancel').onclick = null;
+        resolve(ok);
+      };
+      if (opts.autoClose) {
+        let left = opts.autoClose;
+        const tick = () => { $('#countdown').textContent = 'Starting over in ' + left + ' seconds'; };
+        tick();
+        countdownTimer = setInterval(() => { left -= 1; if (left <= 0) finish(true); else tick(); }, 1000);
+      }
+      $('#dialogOk').onclick = () => finish(true);
+      $('#dialogCancel').onclick = () => finish(false);
+    });
+  }
+
+  // ---- Setup --------------------------------------------------------------
+
+  $('#setupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const entered = $('#staffCode').value.trim();
+    if (!entered) { $('#staffCode').focus(); return; }
+    const btn = $('#setupBtn');
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    code = entered;
+    try {
+      await api('check');
+      store((s) => s.setItem(CODE_KEY, entered));
+      show(store((s) => s.getItem(MODE_KEY)) || 'signin');
+    } catch (err) {
+      if (!err.badcode) { code = ''; toast(err.message); }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Start';
+    }
+  });
+
+  // ---- Sign-in ------------------------------------------------------------
+
+  function phoneDigits(value) {
+    let d = value.replace(/\D/g, '');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1);
+    return d;
+  }
+
+  function formatPhone(value) {
+    const d = value.replace(/\D/g, '').slice(0, 11);
+    if (d.length === 11 && d[0] === '1') return '1-' + formatPhone(d.slice(1));
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return d.slice(0, 3) + '-' + d.slice(3);
+    return d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6, 10);
+  }
+
+  function cleanEmail(value) {
+    return value.trim().toLowerCase().replace(/\s+/g, '');
+  }
+
+  function emailSuggestion(email) {
+    const at = email.lastIndexOf('@');
+    if (at < 1) return '';
+    const fix = DOMAIN_TYPOS[email.slice(at + 1)];
+    return fix ? email.slice(0, at + 1) + fix : '';
+  }
+
+  function updateEmailHelp() {
+    const email = cleanEmail($('#email').value);
+    const domain = email.includes('@') ? email.slice(email.lastIndexOf('@') + 1) : '';
+    $$('#domains .chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.domain === domain)));
+    const suggestion = emailSuggestion(email);
+    $('#emailHint').hidden = !suggestion;
+    if (suggestion) $('#emailHintText').textContent = 'Did you mean ' + suggestion + '?';
+  }
+
+  $('#domains').addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-domain]');
+    if (!chip) return;
+    const input = $('#email');
+    const local = cleanEmail(input.value).split('@')[0];
+    input.value = local + '@' + chip.dataset.domain;
+    updateEmailHelp();
+    if (!local) {
+      input.focus();
+      input.setSelectionRange(0, 0);
+    }
+  });
+
+  $('#emailFix').addEventListener('click', () => {
+    $('#email').value = emailSuggestion(cleanEmail($('#email').value));
+    updateEmailHelp();
+  });
+
+  $('#email').addEventListener('input', updateEmailHelp);
+  $('#phone').addEventListener('input', (e) => {
+    const t = e.target;
+    const atEnd = t.selectionStart === t.value.length;
+    const formatted = formatPhone(t.value);
+    if (formatted !== t.value && atEnd) t.value = formatted;
+  });
+
+  // Return on the iPad keyboard moves to the next box instead of submitting.
+  $('#name').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#email').focus(); } });
+  $('#email').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#phone').focus(); } });
+
+  function guestProblem(g) {
+    if (!g.name) return ['#name', 'Please type your name.'];
+    if (!g.email && !g.phone) return ['#email', 'Please give an email (or at least a phone number) so we can send your photo.'];
+    if (g.email && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(g.email)) return ['#email', 'That email address doesn’t look complete. Check it and try again.'];
+    if (g.phone && phoneDigits(g.phone).length !== 10) return ['#phone', 'Please type the phone number with its area code, like 765-555-1234.'];
+    return null;
+  }
+
+  $('#signinForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    document.activeElement.blur();
+    const guest = {
+      name: $('#name').value.replace(/\s+/g, ' ').trim(),
+      email: cleanEmail($('#email').value),
+      phone: $('#phone').value.trim(),
+    };
+    const problem = guestProblem(guest);
+    if (problem) {
+      toast(problem[1]);
+      $(problem[0]).focus();
+      return;
+    }
+    $('#toast').hidden = true;
+    const suggestion = emailSuggestion(guest.email);
+    const ok = await dialog({
+      title: 'Is everything right?',
+      body:
+        '<p class="confirm-line"><span>Name</span><strong>' + esc(guest.name) + '</strong></p>' +
+        (guest.email ? '<p class="confirm-line"><span>Your photo will be emailed to</span><strong>' + esc(guest.email) + '</strong></p>'
+                     : '<p class="confirm-line"><span>Email</span><strong>None given</strong></p>') +
+        (suggestion ? '<p class="hint-box"><span>Did you mean <b>' + esc(suggestion) + '</b>?</span></p>' : '') +
+        (guest.phone ? '<p class="confirm-line"><span>Phone</span><strong>' + esc(formatPhone(phoneDigits(guest.phone))) + '</strong></p>' : ''),
+      ok: 'Yes, sign in',
+      cancel: 'Fix it',
+    });
+    if (!ok) {
+      $(suggestion ? '#email' : '#name').focus();
+      return;
+    }
+    const btn = $('#signinBtn');
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+    let res;
+    try {
+      res = await api('signIn', { guest: guest });
+    } catch (err) {
+      toast(err.message && err.message + ' Everything you typed is still here.');
+      return;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+    await dialog({
+      check: true,
+      title: 'You’re signed in!',
+      body: 'Your number is<span class="big-num">' + res.number + '</span>Tell the photographer your number' +
+        (guest.email ? ', and we’ll email your photo to <strong>' + esc(guest.email) + '</strong>.' : '.'),
+      ok: 'Next family',
+      autoClose: NEXT_FAMILY_AFTER,
+    });
+    $('#signinForm').reset();
+    updateEmailHelp();
+    window.scrollTo(0, 0);
+  });
+
+  // ---- Photo numbers ------------------------------------------------------
+
+  let rows = [];
+  let filter = 'needs';
+  let refreshTimer;
+  const justSaved = {}; // sign-in # -> time saved, so a saved row doesn't vanish from "Needs" at once
+  const rowEls = {};
+
+  function photoRow(r) {
+    const el = document.createElement('div');
+    el.className = 'guest';
+    el.dataset.n = r.number;
+    el.innerHTML =
+      '<div class="num">#' + r.number + '</div>' +
+      '<div class="who"><div class="name"></div><div class="meta"></div></div>' +
+      '<form novalidate><input inputmode="numeric" maxlength="40" placeholder="Photo #" autocomplete="off" enterkeyhint="done">' +
+      '<button type="submit" class="save">Save</button></form>';
+    el.querySelector('input').setAttribute('aria-label', 'Photo number for #' + r.number);
+    return el;
+  }
+
+  function fillRow(el, r) {
+    el.querySelector('.name').textContent = r.name;
+    const bits = ['Signed in ' + esc(r.time)];
+    bits.push(r.hasEmail ? 'Has email' : '<span class="warn">No email</span>');
+    if (r.sent) bits.push('<span class="ok">Photo emailed</span>');
+    else if (justSaved[r.number] && r.photo) bits.push('<span class="ok">Saved</span>');
+    el.querySelector('.meta').innerHTML = bits.join(' &middot; ');
+    el.classList.toggle('done', !!r.photo);
+    const input = el.querySelector('input');
+    if (!input.dataset.dirty && document.activeElement !== input) input.value = r.photo;
+  }
+
+  function render() {
+    const list = $('#list');
+    // Newest first. New sign-ins always have higher numbers, so they go on top.
+    rows.slice().reverse().forEach((r) => {
+      let el = rowEls[r.number];
+      if (!el) {
+        el = rowEls[r.number] = photoRow(r);
+        list.insertBefore(el, list.firstChild);
+      }
+      fillRow(el, r);
+    });
+    const q = $('#search').value.trim().toLowerCase().replace(/^#/, '');
+    let shown = 0;
+    rows.forEach((r) => {
+      const recent = justSaved[r.number] && Date.now() - justSaved[r.number] < 30000;
+      const input = rowEls[r.number].querySelector('input');
+      const matches = !q || r.name.toLowerCase().includes(q) || String(r.number) === q;
+      const wanted = filter === 'all' || !r.photo || recent || !!input.dataset.dirty;
+      rowEls[r.number].hidden = !(matches && wanted);
+      if (!rowEls[r.number].hidden) shown++;
+    });
+    const needs = rows.filter((r) => !r.photo).length;
+    $('#needsCount').textContent = '(' + needs + ')';
+    $('#allCount').textContent = '(' + rows.length + ')';
+    $('#empty').hidden = shown > 0;
+    $('#empty').textContent = !rows.length ? 'No one has signed in yet. New sign-ins show up here on their own.'
+      : q ? 'No sign-ins match “' + $('#search').value.trim() + '”.'
+      : 'Every family has a photo number. Nice work!';
+  }
+
+  let refreshing = false;
+  async function refresh() {
+    if (refreshing || mode !== 'photos') return;
+    refreshing = true;
+    try {
+      const res = await api('list');
+      rows = res.rows;
+      render();
+      $('#status').classList.remove('bad');
+      $('#status').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) +
+        '. New sign-ins appear on their own.';
+    } catch (err) {
+      if (!err.badcode) {
+        $('#status').classList.add('bad');
+        $('#status').textContent = err.message + ' Trying again shortly.';
+      }
+    } finally {
+      refreshing = false;
+    }
+  }
+
+  $('#list').addEventListener('input', (e) => {
+    if (e.target.matches('input')) e.target.dataset.dirty = '1';
+  });
+
+  $('#list').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const el = e.target.closest('.guest');
+    const number = Number(el.dataset.n);
+    const input = el.querySelector('input');
+    const btn = el.querySelector('.save');
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+      const res = await api('setPhoto', { number: number, photo: input.value });
+      delete input.dataset.dirty;
+      input.value = res.photo;
+      input.blur();
+      justSaved[number] = Date.now();
+      const r = rows.find((x) => x.number === number);
+      if (r) r.photo = res.photo;
+      render();
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save';
+    }
+  });
+
+  $('#search').addEventListener('input', render);
+  $$('[data-filter]').forEach((b) => b.addEventListener('click', () => {
+    filter = b.dataset.filter;
+    $$('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    render();
+  }));
+
+  $('#forget').addEventListener('click', async () => {
+    const ok = await dialog({
+      title: 'Forget the staff code?',
+      body: 'This iPad will ask for the code again before anyone can use it.',
+      ok: 'Forget it',
+      cancel: 'Cancel',
+    });
+    if (ok) lockOut('Enter the staff code from the church office. This iPad remembers it.');
+  });
+
+  // ---- Start --------------------------------------------------------------
+
+  $('#modes').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-mode]');
+    if (b && b.dataset.mode !== mode) show(b.dataset.mode);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && mode === 'photos') refresh();
+  });
+
+  code = store((s) => s.getItem(CODE_KEY)) || '';
+  const fromHash = location.hash.slice(1);
+  if (!code) show('setup');
+  else show(fromHash === 'photos' || fromHash === 'signin' ? fromHash : store((s) => s.getItem(MODE_KEY)) || 'signin');
+</script>
+</body>
+</html>
